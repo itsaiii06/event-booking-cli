@@ -3,27 +3,49 @@ package main
 import (
 	"event-booking-cli/common"
 	"fmt"
+	"sync"
+	"time"
 )
 
 const TOTAL_TICKETS uint = 100
 
 var remainingTickets = TOTAL_TICKETS
-var attendees = []string{}
+var attendees = make([]UserData, 0) // zero wont matter becuase it will increase anyways
+var firstNames = []string{}
+
+type UserData struct {
+	userName    string
+	userEmail   string
+	userTickets uint
+}
+
+var wg = sync.WaitGroup{}
 
 func main() {
 	getGreeting()
 
-	for remainingTickets > 0 {
-		userName, userEmail, userTickets := getInput() //gets the input
+	// for remainingTickets > 0 {
+	userName, userEmail, userTickets := getInput() //gets the input
 
-		if !common.ValidateInput(userName, userEmail, userTickets, TOTAL_TICKETS) {
-			fmt.Println("INVALID INPUT : Please try again!")
-			fmt.Println("------------------------------------------")
-			continue // not true so skip the portion below
-		}
-
-		fmt.Println("Correct Input !")
+	if !common.ValidateInput(userName, userEmail, userTickets, remainingTickets) {
+		// continue // not true so skip the portion below
 	}
+	var userData UserData = getTicket(userName, userEmail, userTickets)
+
+	wg.Add(1)
+	go sendTicket(userData)
+
+	var firstName string = common.GetFirstName(userName)
+	firstNames = append(firstNames, firstName)
+
+	// }
+	if remainingTickets == 0 {
+		fmt.Println("")
+		fmt.Println("we're all out !")
+		fmt.Println("*********** TRY NEXT YEAR ***********")
+
+	}
+	wg.Wait()
 
 }
 
@@ -36,11 +58,13 @@ func getGreeting() {
 
 func getInput() (string, string, uint) {
 	var userName string
+	var userName2 string
 	var userEmail string
 	var userTickets uint
 
 	fmt.Println("Enter your name : ")
 	fmt.Scan(&userName)
+	fmt.Scan(&userName2)
 
 	fmt.Println("Enter your email address : ")
 	fmt.Scan(&userEmail)
@@ -50,6 +74,39 @@ func getInput() (string, string, uint) {
 
 	fmt.Println("")
 
-	return userName, userEmail, userTickets
+	return userName + " " + userName2, userEmail, userTickets
+
+}
+
+func getTicket(userName string, userEmail string, userTickets uint) UserData {
+	remainingTickets -= userTickets
+
+	var userData = UserData{
+		userName:    userName,
+		userEmail:   userEmail,
+		userTickets: userTickets,
+	}
+
+	attendees = append(attendees, userData)
+
+	// fmt.Printf("%v tickets registered for %v \n", userTickets, userName)
+	// fmt.Printf("attendees = %v \n\n", attendees)
+
+	return userData
+
+}
+
+func sendTicket(data UserData) {
+	fmt.Println("GENERATING TICKET .....")
+	time.Sleep(10 * time.Second) // sleep stops the execution for the current thread
+	fmt.Println("################################################")
+	fmt.Printf("%v tickets have been booked for %v \n", data.userTickets, data.userName)
+	fmt.Println("Check your email : ", data.userEmail)
+	fmt.Println("")
+	fmt.Println("*********** SEE YOU AT THE GOPHER CON ***********")
+	fmt.Println("################################################")
+	fmt.Println("")
+
+	wg.Done()
 
 }
