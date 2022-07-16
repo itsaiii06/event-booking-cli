@@ -28,8 +28,17 @@ func main() {
 	userName, userEmail, userTickets := getInput() //gets the input
 
 	if !common.ValidateInput(userName, userEmail, userTickets, remainingTickets) {
+		return
 		// continue // not true so skip the portion below
 	}
+
+	if remainingTickets == 0 {
+		fmt.Println("")
+		fmt.Println("we're all out !")
+		fmt.Println("*********** TRY NEXT YEAR ***********")
+
+	}
+
 	var userData UserData = getTicket(userName, userEmail, userTickets)
 
 	wg.Add(1)
@@ -39,12 +48,7 @@ func main() {
 	firstNames = append(firstNames, firstName)
 
 	// }
-	if remainingTickets == 0 {
-		fmt.Println("")
-		fmt.Println("we're all out !")
-		fmt.Println("*********** TRY NEXT YEAR ***********")
 
-	}
 	wg.Wait()
 
 }
@@ -69,7 +73,7 @@ func getInput() (string, string, uint) {
 	fmt.Println("Enter your email address : ")
 	fmt.Scan(&userEmail)
 
-	fmt.Println("How many tickets do you want to register?: ")
+	fmt.Println("How many tickets do you want to book? ")
 	fmt.Scan(&userTickets)
 
 	fmt.Println("")
